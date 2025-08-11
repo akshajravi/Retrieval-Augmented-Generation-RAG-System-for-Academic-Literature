@@ -1,4 +1,4 @@
-# AI Papers RAG System
+# AI Papers RAG System (Still in Progress)
 
 A Retrieval-Augmented Generation (RAG) system for querying and analyzing AI research papers. This system allows you to upload research papers, index them in a vector database, and query them using natural language.
 
