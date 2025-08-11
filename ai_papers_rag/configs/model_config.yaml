@@ -1,0 +1,195 @@
+# Model Configuration for AI Papers RAG System
+# This file contains settings for language models and embedding models
+
+# Language Model Configuration
+llm:
+  # Primary model for generation
+  primary:
+    provider: "openai"
+    model_name: "gpt-3.5-turbo"
+    api_key_env: "OPENAI_API_KEY"
+    temperature: 0.1
+    max_tokens: 2000
+    timeout: 30
+    retry_attempts: 3
+    retry_delay: 1
+  
+  # Fallback model (optional)
+  fallback:
+    provider: "openai"
+    model_name: "gpt-3.5-turbo"
+    temperature: 0.2
+    max_tokens: 1500
+  
+  # Alternative models for experimentation
+  alternatives:
+    gpt4:
+      provider: "openai"
+      model_name: "gpt-4"
+      temperature: 0.1
+      max_tokens: 2000
+      cost_per_token: 0.00003  # USD per token
+    
+    claude:
+      provider: "anthropic"
+      model_name: "claude-3-sonnet"
+      temperature: 0.1
+      max_tokens: 2000
+      api_key_env: "ANTHROPIC_API_KEY"
+
+# Embedding Model Configuration
+embeddings:
+  # Primary embedding model
+  primary:
+    provider: "openai"
+    model_name: "text-embedding-ada-002"
+    api_key_env: "OPENAI_API_KEY"
+    dimension: 1536
+    max_input_tokens: 8191
+    batch_size: 100
+    timeout: 30
+    cost_per_1k_tokens: 0.0004  # USD
+  
+  # Alternative embedding models
+  alternatives:
+    sentence_bert_mini:
+      provider: "huggingface"
+      model_name: "all-MiniLM-L6-v2"
+      dimension: 384
+      max_input_tokens: 512
+      batch_size: 32
+      device: "cpu"  # or "cuda" for GPU
+      cost_per_1k_tokens: 0.0  # Free
+    
+    sentence_bert_base:
+      provider: "huggingface"
+      model_name: "all-mpnet-base-v2"
+      dimension: 768
+      max_input_tokens: 512
+      batch_size: 16
+      device: "cpu"
+      cost_per_1k_tokens: 0.0  # Free
+    
+    cohere_embed:
+      provider: "cohere"
+      model_name: "embed-english-v3.0"
+      dimension: 1024
+      api_key_env: "COHERE_API_KEY"
+      input_type: "search_document"
+      cost_per_1k_tokens: 0.0001  # USD
+
+# Performance and Optimization Settings
+performance:
+  # Caching configuration
+  cache:
+    enabled: true
+    embeddings_ttl: 86400  # 24 hours in seconds
+    llm_responses_ttl: 3600  # 1 hour in seconds
+    cache_backend: "memory"  # "memory", "redis", "file"
+    max_cache_size: 1000  # Maximum number of cached items
+  
+  # Rate limiting
+  rate_limits:
+    embeddings_per_minute: 3000
+    llm_requests_per_minute: 60
+    concurrent_requests: 10
+  
+  # Batch processing
+  batch_processing:
+    embedding_batch_size: 100
+    max_batch_wait_time: 1  # seconds
+    enable_auto_batching: true
+
+# Quality and Safety Settings
+quality:
+  # Content filtering
+  content_filters:
+    enable_profanity_filter: false
+    enable_toxicity_filter: false
+    max_answer_length: 2000  # characters
+    min_answer_length: 50   # characters
+  
+  # Response validation
+  validation:
+    enable_factuality_check: false
+    enable_relevance_check: true
+    min_relevance_threshold: 0.5
+    enable_citation_validation: true
+  
+  # Fallback behavior
+  fallback:
+    on_low_confidence: "return_with_warning"  # "return_with_warning", "fallback_model", "reject"
+    confidence_threshold: 0.6
+    max_retries: 2
+
+# Monitoring and Logging
+monitoring:
+  # Metrics collection
+  metrics:
+    enable_performance_metrics: true
+    enable_quality_metrics: true
+    enable_cost_tracking: true
+    metrics_retention_days: 30
+  
+  # Logging configuration
+  logging:
+    level: "INFO"  # DEBUG, INFO, WARNING, ERROR
+    log_requests: true
+    log_responses: false  # Set to false to avoid logging sensitive data
+    log_errors: true
+    log_performance: true
+  
+  # Alerts and notifications
+  alerts:
+    enable_error_alerts: true
+    enable_performance_alerts: true
+    enable_cost_alerts: true
+    cost_threshold_usd: 100  # Daily cost threshold
+    response_time_threshold: 5  # seconds
+    error_rate_threshold: 0.05  # 5%
+
+# Development and Testing
+development:
+  # Mock mode for testing
+  mock_mode:
+    enabled: false
+    mock_embeddings: false
+    mock_llm_responses: false
+    fixed_responses: null
+  
+  # Debugging
+  debug:
+    verbose_logging: false
+    save_intermediate_results: false
+    enable_profiling: false
+    log_token_usage: true
+  
+  # A/B Testing
+  ab_testing:
+    enabled: false
+    test_groups: []
+    traffic_split: {}
+
+# Model-specific configurations
+model_specific:
+  openai:
+    organization_id: null
+    request_timeout: 30
+    max_retries: 3
+    exponential_backoff: true
+    stream_responses: false
+  
+  huggingface:
+    use_auth_token: false
+    trust_remote_code: false
+    cache_dir: "./models"
+    device_map: "auto"
+  
+  anthropic:
+    request_timeout: 30
+    max_retries: 3
+    stream_responses: false
+  
+  cohere:
+    request_timeout: 30
+    max_retries: 3

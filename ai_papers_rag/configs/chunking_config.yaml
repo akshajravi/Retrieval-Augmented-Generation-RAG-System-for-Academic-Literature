@@ -1,0 +1,273 @@
+# Chunking Configuration for AI Papers RAG System
+# This file contains settings for document chunking and text processing
+
+# Default Chunking Strategy
+default_strategy:
+  # Chunking method: "fixed_tokens", "fixed_words", "sentences", "paragraphs", "sections", "semantic"
+  method: "fixed_words"
+  chunk_size: 1000  # tokens/words depending on method
+  chunk_overlap: 200  # tokens/words of overlap between chunks
+  min_chunk_size: 100  # minimum size to avoid tiny chunks
+  max_chunk_size: 2000  # maximum size to avoid overly large chunks
+
+# Strategy-specific Configurations
+strategies:
+  # Fixed token chunking (using tiktoken)
+  fixed_tokens:
+    chunk_size: 800
+    chunk_overlap: 150
+    encoding: "cl100k_base"  # GPT-3.5/GPT-4 encoding
+    preserve_sentences: true  # try not to break mid-sentence
+    preserve_paragraphs: false
+    min_chunk_tokens: 50
+    max_chunk_tokens: 1500
+  
+  # Fixed word chunking
+  fixed_words:
+    chunk_size: 1000
+    chunk_overlap: 200
+    preserve_sentences: true
+    preserve_paragraphs: true
+    min_chunk_words: 100
+    max_chunk_words: 1800
+  
+  # Sentence-based chunking
+  sentences:
+    sentences_per_chunk: 5
+    max_sentences_per_chunk: 10
+    min_sentences_per_chunk: 2
+    overlap_sentences: 1
+    preserve_paragraph_boundaries: true
+    sentence_splitter: "spacy"  # "spacy", "nltk", "regex"
+  
+  # Paragraph-based chunking
+  paragraphs:
+    paragraphs_per_chunk: 2
+    max_paragraphs_per_chunk: 4
+    min_paragraphs_per_chunk: 1
+    overlap_paragraphs: 1
+    min_paragraph_words: 50
+    merge_short_paragraphs: true
+  
+  # Section-based chunking (for structured documents)
+  sections:
+    section_headers: ["Abstract", "Introduction", "Methods", "Results", "Discussion", "Conclusion"]
+    include_headers: true
+    max_section_tokens: 2000
+    split_large_sections: true
+    split_threshold: 1500
+    preserve_section_structure: true
+  
+  # Semantic chunking (experimental)
+  semantic:
+    similarity_threshold: 0.7
+    min_chunk_sentences: 3
+    max_chunk_sentences: 15
+    embedding_model: "sentence-transformers/all-MiniLM-L6-v2"
+    sliding_window: 3
+
+# Document Type Specific Settings
+document_types:
+  # Academic papers
+  academic_paper:
+    preferred_strategy: "sections"
+    fallback_strategy: "paragraphs"
+    chunk_size: 1200
+    chunk_overlap: 250
+    preserve_citations: true
+    preserve_equations: true
+    preserve_tables: true
+    extract_metadata: true
+    metadata_fields: ["title", "authors", "abstract", "keywords", "doi"]
+  
+  # General documents
+  general:
+    preferred_strategy: "fixed_words"
+    chunk_size: 1000
+    chunk_overlap: 200
+    preserve_formatting: false
+  
+  # Code documentation
+  code_docs:
+    preferred_strategy: "sections"
+    chunk_size: 800
+    chunk_overlap: 150
+    preserve_code_blocks: true
+    code_block_markers: ["```", "    "]
+  
+  # Books/Long-form content
+  books:
+    preferred_strategy: "paragraphs"
+    chunk_size: 1500
+    chunk_overlap: 300
+    chapter_aware: true
+    preserve_chapter_boundaries: true
+
+# Text Processing Configuration
+text_processing:
+  # Preprocessing steps
+  preprocessing:
+    normalize_whitespace: true
+    remove_extra_newlines: true
+    fix_encoding_issues: true
+    remove_page_numbers: true
+    remove_headers_footers: true
+    clean_ocr_artifacts: true
+  
+  # Text cleaning
+  cleaning:
+    remove_urls: false
+    remove_emails: false
+    normalize_unicode: true
+    fix_common_typos: false
+    remove_non_text_elements: true
+    preserve_scientific_notation: true
+  
+  # Language detection and handling
+  language:
+    detect_language: true
+    primary_language: "en"
+    supported_languages: ["en", "es", "fr", "de"]
+    language_specific_processing: true
+
+# Quality Control
+quality_control:
+  # Chunk validation
+  validation:
+    min_text_ratio: 0.7  # minimum ratio of text to total characters
+    max_duplicate_ratio: 0.3  # maximum ratio of duplicated content
+    check_encoding: true
+    validate_structure: true
+  
+  # Content filtering
+  filtering:
+    remove_low_information_chunks: true
+    information_threshold: 10  # minimum words with semantic meaning
+    remove_duplicate_chunks: true
+    similarity_threshold_duplicates: 0.9
+    filter_by_language: true
+  
+  # Metadata extraction
+  metadata:
+    extract_chunk_metadata: true
+    include_position_info: true
+    include_parent_document: true
+    include_chunk_statistics: true
+    metadata_fields:
+      - chunk_id
+      - document_id
+      - chunk_index
+      - start_position
+      - end_position
+      - word_count
+      - sentence_count
+      - language
+      - section_title
+
+# Performance Optimization
+performance:
+  # Parallel processing
+  parallel_processing:
+    enabled: true
+    max_workers: 4
+    chunk_batch_size: 100
+    use_multiprocessing: false  # Use threading by default
+  
+  # Memory management
+  memory:
+    max_chunks_in_memory: 10000
+    chunk_size_limit_mb: 100
+    enable_streaming: true
+    garbage_collect_frequency: 1000
+  
+  # Caching
+  caching:
+    cache_processed_documents: true
+    cache_chunks: true
+    cache_ttl: 86400  # 24 hours
+    cache_backend: "memory"  # "memory", "redis", "file"
+
+# Advanced Features
+advanced:
+  # Hierarchical chunking
+  hierarchical:
+    enabled: false
+    levels: ["document", "section", "paragraph", "sentence"]
+    overlap_between_levels: true
+    maintain_hierarchy: true
+  
+  # Adaptive chunking
+  adaptive:
+    enabled: false
+    adjust_based_on_content: true
+    density_threshold: 0.8
+    complexity_metrics: ["sentence_length", "vocabulary_diversity"]
+  
+  # Cross-references
+  cross_references:
+    preserve_references: true
+    link_related_chunks: false
+    reference_types: ["citations", "figures", "tables", "equations"]
+
+# Chunking Rules and Patterns
+rules:
+  # Boundary preservation rules
+  boundaries:
+    never_split_within:
+      - "equations"
+      - "code_blocks" 
+      - "tables"
+      - "citations"
+      - "urls"
+    
+    prefer_split_at:
+      - "sentence_end"
+      - "paragraph_break"
+      - "section_break"
+      - "list_item_break"
+  
+  # Special patterns
+  patterns:
+    section_headers:
+      - regex: "^#{1,6}\\s+"  # Markdown headers
+      - regex: "^\\d+\\.\\s+"  # Numbered sections
+      - regex: "^[A-Z][A-Z\\s]+$"  # ALL CAPS headers
+    
+    citation_patterns:
+      - regex: "\\[\\d+\\]"  # [1], [2], etc.
+      - regex: "\\(\\w+\\s+et\\s+al\\.?,?\\s+\\d{4}\\)"  # (Smith et al., 2020)
+    
+    equation_patterns:
+      - regex: "\\$\\$[^$]+\\$\\$"  # LaTeX display math
+      - regex: "\\$[^$]+\\$"  # LaTeX inline math
+
+# Debug and Development
+debug:
+  # Logging
+  log_chunking_decisions: false
+  save_intermediate_results: false
+  verbose_output: false
+  
+  # Testing
+  enable_test_mode: false
+  test_document_path: null
+  compare_strategies: false
+  benchmark_performance: false
+
+# Export and Integration
+export:
+  # Output formats
+  formats:
+    json: true
+    csv: false
+    parquet: false
+  
+  # Chunk metadata in output
+  include_metadata: true
+  include_statistics: true
+  include_source_mapping: true
+  
+  # Integration settings
+  vector_store_format: true
+  embedding_ready: true
+  preserve_document_structure: false

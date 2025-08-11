@@ -1,0 +1,375 @@
+# Retrieval Configuration for AI Papers RAG System
+# This file contains settings for document retrieval and search functionality
+
+# Default Retrieval Settings
+default:
+  # Number of documents to retrieve
+  k: 5
+  # Minimum similarity threshold
+  similarity_threshold: 0.7
+  # Maximum documents to consider before filtering
+  max_candidates: 50
+  # Retrieval strategy: "semantic", "keyword", "hybrid", "ensemble"
+  strategy: "semantic"
+  # Enable re-ranking of results
+  enable_reranking: true
+  # Diversity factor for result diversification (0.0 to 1.0)
+  diversity_factor: 0.1
+
+# Search Strategies
+strategies:
+  # Semantic search using embeddings
+  semantic:
+    # Embedding model for queries (should match document embeddings)
+    embedding_model: "text-embedding-ada-002"
+    # Similarity metric: "cosine", "dot_product", "euclidean"
+    similarity_metric: "cosine"
+    # Query preprocessing
+    preprocess_query: true
+    # Query expansion
+    expand_query: false
+    # Normalization
+    normalize_embeddings: true
+  
+  # Keyword-based search
+  keyword:
+    # Search engine: "bm25", "tfidf", "boolean"
+    search_engine: "bm25"
+    # BM25 parameters
+    bm25_k1: 1.2
+    bm25_b: 0.75
+    # TF-IDF parameters
+    tfidf_max_features: 10000
+    tfidf_ngram_range: [1, 2]
+    # Preprocessing
+    stemming: true
+    remove_stopwords: true
+    case_sensitive: false
+  
+  # Hybrid search (semantic + keyword)
+  hybrid:
+    # Weight for semantic search (0.0 to 1.0)
+    semantic_weight: 0.7
+    # Weight for keyword search
+    keyword_weight: 0.3
+    # Fusion method: "weighted_sum", "rrf", "rank_fusion"
+    fusion_method: "weighted_sum"
+    # Reciprocal Rank Fusion parameter (if using rrf)
+    rrf_k: 60
+  
+  # Ensemble search (multiple models/strategies)
+  ensemble:
+    # List of strategies to ensemble
+    strategies: ["semantic", "keyword"]
+    # Ensemble method: "voting", "averaging", "stacking"
+    ensemble_method: "averaging"
+    # Weights for each strategy
+    weights: [0.7, 0.3]
+    # Consensus threshold
+    consensus_threshold: 0.5
+
+# Query Processing
+query_processing:
+  # Preprocessing steps
+  preprocessing:
+    # Normalize text
+    normalize_text: true
+    # Remove special characters
+    clean_special_chars: true
+    # Expand contractions (don't -> do not)
+    expand_contractions: true
+    # Remove stop words
+    remove_stopwords: false  # Usually keep for semantic search
+    # Apply stemming/lemmatization
+    apply_stemming: false
+    apply_lemmatization: false
+  
+  # Query expansion
+  expansion:
+    # Enable query expansion
+    enabled: false
+    # Expansion method: "synonyms", "embeddings", "llm", "wordnet"
+    method: "synonyms"
+    # Maximum number of expansion terms
+    max_expansion_terms: 3
+    # Minimum similarity for expansion terms
+    expansion_threshold: 0.8
+    # Weight for original vs expanded terms
+    original_weight: 0.8
+  
+  # Query reformulation
+  reformulation:
+    # Enable automatic query reformulation
+    enabled: false
+    # Reformulation strategies
+    strategies: ["rephrase", "decompose", "clarify"]
+    # Use LLM for reformulation
+    use_llm: false
+    # Maximum reformulation attempts
+    max_attempts: 2
+
+# Filtering and Post-processing
+filtering:
+  # Metadata filtering
+  metadata_filters:
+    # Enable filtering by metadata
+    enabled: true
+    # Available filter fields
+    filterable_fields:
+      - "document_type"
+      - "publication_year" 
+      - "authors"
+      - "journal"
+      - "keywords"
+      - "language"
+    # Filter operators
+    operators: ["equals", "contains", "greater_than", "less_than", "in", "not_in"]
+  
+  # Content filtering
+  content_filters:
+    # Minimum content length
+    min_content_length: 50
+    # Maximum content length
+    max_content_length: 5000
+    # Language filtering
+    language_filter: "en"
+    # Remove duplicates
+    remove_duplicates: true
+    # Duplicate threshold
+    duplicate_threshold: 0.95
+  
+  # Quality filtering
+  quality_filters:
+    # Minimum quality score
+    min_quality_score: 0.5
+    # Quality metrics to consider
+    quality_metrics: ["coherence", "informativeness", "relevance"]
+    # Filter low-confidence results
+    confidence_threshold: 0.6
+
+# Re-ranking
+reranking:
+  # Re-ranking method: "cross_encoder", "listwise", "pointwise"
+  method: "cross_encoder"
+  # Re-ranking model
+  model: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+  # Number of candidates to re-rank
+  rerank_top_k: 20
+  # Final number of results after re-ranking
+  final_k: 5
+  
+  # Cross-encoder specific settings
+  cross_encoder:
+    # Model path or name
+    model_name: "cross-encoder/ms-marco-MiniLM-L-6-v2"
+    # Batch size for re-ranking
+    batch_size: 16
+    # Device to use
+    device: "cpu"
+    # Normalization
+    normalize_scores: true
+  
+  # Custom re-ranking features
+  custom_features:
+    # Enable custom features
+    enabled: false
+    # Feature weights
+    weights:
+      recency: 0.1
+      authority: 0.1
+      length: 0.05
+      exact_match: 0.2
+
+# Result Processing
+results:
+  # Result formatting
+  formatting:
+    # Include metadata in results
+    include_metadata: true
+    # Include similarity scores
+    include_scores: true
+    # Include rank information
+    include_rank: true
+    # Snippet length for preview
+    snippet_length: 200
+    # Highlight query terms in snippets
+    highlight_terms: true
+  
+  # Result diversification
+  diversification:
+    # Enable diversification
+    enabled: true
+    # Diversification method: "mmr", "topic_based", "temporal"
+    method: "mmr"
+    # Diversity parameter (lambda in MMR)
+    diversity_lambda: 0.3
+    # Maximum results from same document
+    max_per_document: 2
+    # Maximum results from same author
+    max_per_author: 3
+  
+  # Result aggregation
+  aggregation:
+    # Group results by document
+    group_by_document: false
+    # Maximum groups to return
+    max_groups: 10
+    # Results per group
+    results_per_group: 2
+
+# Performance Optimization
+performance:
+  # Caching
+  caching:
+    # Enable query result caching
+    enabled: true
+    # Cache TTL in seconds
+    ttl: 3600  # 1 hour
+    # Cache size (number of queries)
+    max_size: 1000
+    # Cache backend
+    backend: "memory"  # "memory", "redis", "file"
+  
+  # Indexing optimization
+  indexing:
+    # Index refresh frequency
+    refresh_interval: 300  # 5 minutes
+    # Batch size for indexing
+    batch_size: 1000
+    # Enable incremental indexing
+    incremental: true
+    # Index compression
+    compression: true
+  
+  # Search optimization
+  search:
+    # Enable approximate search for large datasets
+    approximate_search: false
+    # Search timeout in seconds
+    timeout: 10
+    # Parallel search execution
+    parallel_execution: true
+    # Maximum concurrent searches
+    max_concurrent: 5
+
+# Vector Store Configuration
+vector_store:
+  # Vector store type: "chroma", "faiss", "pinecone", "weaviate", "qdrant"
+  type: "chroma"
+  
+  # ChromaDB specific settings
+  chroma:
+    # Collection name
+    collection_name: "ai_papers"
+    # Persistence directory
+    persist_directory: "./data/vector_db"
+    # Distance metric
+    distance_metric: "cosine"
+    # Enable persistence
+    persist: true
+  
+  # FAISS specific settings
+  faiss:
+    # Index type: "flat", "ivf", "hnsw"
+    index_type: "flat"
+    # Number of clusters for IVF
+    nlist: 100
+    # HNSW parameters
+    hnsw_m: 16
+    hnsw_ef: 200
+    # Enable GPU if available
+    use_gpu: false
+  
+  # Pinecone specific settings (if using cloud)
+  pinecone:
+    # Environment
+    environment: "us-west1-gcp"
+    # Index name
+    index_name: "ai-papers-rag"
+    # Dimension (must match embedding dimension)
+    dimension: 1536
+    # Metric type
+    metric: "cosine"
+
+# Advanced Features
+advanced:
+  # Multi-modal search
+  multimodal:
+    # Enable multi-modal search
+    enabled: false
+    # Supported modalities
+    modalities: ["text", "image", "table"]
+    # Cross-modal similarity weights
+    cross_modal_weights:
+      text_text: 1.0
+      text_image: 0.3
+      text_table: 0.5
+  
+  # Temporal search
+  temporal:
+    # Enable temporal considerations
+    enabled: false
+    # Recency boost factor
+    recency_boost: 0.1
+    # Time decay function: "exponential", "linear", "step"
+    decay_function: "exponential"
+    # Decay parameter
+    decay_rate: 0.1
+  
+  # Graph-based search
+  graph:
+    # Enable graph-based retrieval
+    enabled: false
+    # Graph construction method
+    construction_method: "similarity"
+    # Graph traversal algorithm
+    traversal_algorithm: "random_walk"
+    # Walk parameters
+    walk_length: 5
+    num_walks: 10
+
+# Evaluation and Monitoring
+evaluation:
+  # Metrics to track
+  metrics:
+    # Relevance metrics
+    relevance: ["precision", "recall", "f1", "map", "ndcg"]
+    # Diversity metrics
+    diversity: ["intra_list_diversity", "coverage"]
+    # Efficiency metrics
+    efficiency: ["query_latency", "throughput", "index_size"]
+  
+  # Ground truth evaluation
+  ground_truth:
+    # Path to ground truth file
+    file_path: null
+    # Format: "json", "csv", "xml"
+    format: "json"
+    # Evaluation frequency
+    evaluation_frequency: "weekly"
+  
+  # A/B testing
+  ab_testing:
+    # Enable A/B testing
+    enabled: false
+    # Test configurations
+    test_configs: []
+    # Traffic split
+    traffic_split: [0.5, 0.5]
+    # Success metrics
+    success_metrics: ["click_through_rate", "user_satisfaction"]
+
+# Debug and Development
+debug:
+  # Verbose logging
+  verbose: false
+  # Log query processing steps
+  log_query_processing: false
+  # Log retrieval decisions
+  log_retrieval_decisions: false
+  # Save intermediate results
+  save_intermediate: false
+  # Explain mode (show reasoning)
+  explain_mode: false
+  # Profile performance
+  profile_performance: false
