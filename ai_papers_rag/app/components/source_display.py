@@ -233,7 +233,7 @@ class SourceDisplay:
     
     def _perform_search(self, query: str, num_results: int, threshold: float):
         with st.spinner("Searching through documents..."):
-            # TODO: Implement actual search logic
+            # Search functionality placeholder
             # For now, return mock results
             mock_results = self._generate_mock_results(query, num_results)
             st.session_state.search_results = mock_results

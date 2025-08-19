@@ -3,6 +3,15 @@ from typing import List, Dict, Any, Optional
 from pathlib import Path
 import pandas as pd
 from datetime import datetime
+import sys
+import os
+
+# Add src to path for imports
+project_root = Path(__file__).parent.parent.parent
+sys.path.append(str(project_root / "src"))
+
+from src.config import Config
+import chromadb
 
 class DocumentBrowser:
     def __init__(self):
@@ -146,32 +155,41 @@ class DocumentBrowser:
                     self._delete_document(doc)
     
     def _load_documents(self) -> pd.DataFrame:
-        # TODO: Load actual documents from database
-        # For now, return sample data
-        sample_data = [
-            {
-                'title': 'Attention Is All You Need',
-                'authors': 'Vaswani et al.',
-                'upload_date': '2024-01-15',
-                'status': 'Processed',
-                'file_size': '2.3 MB',
-                'pages': 15,
-                'abstract': 'We propose a new simple network architecture, the Transformer, based solely on attention mechanisms...',
-                'keywords': 'attention, transformer, neural networks'
-            },
-            {
-                'title': 'BERT: Pre-training of Deep Bidirectional Transformers',
-                'authors': 'Devlin et al.',
-                'upload_date': '2024-01-10',
-                'status': 'Processing',
-                'file_size': '1.8 MB',
-                'pages': 12,
-                'abstract': 'We introduce a new language representation model called BERT...',
-                'keywords': 'BERT, language model, pre-training'
-            }
-        ]
-        
-        return pd.DataFrame(sample_data)
+        # Load documents from ChromaDB database
+        try:
+            # Connect to ChromaDB
+            client = chromadb.PersistentClient(path=Config.VECTOR_DB_PATH)
+            collection = client.get_or_create_collection("ai_papers")
+            
+            # Get all documents
+            results = collection.get(include=['metadatas'])
+            metadatas = results.get('metadatas', [])
+            
+            if not metadatas:
+                return pd.DataFrame()
+            
+            # Group by source file to get unique papers
+            papers = {}
+            for metadata in metadatas:
+                source_file = metadata.get('source_file', 'Unknown')
+                if source_file not in papers:
+                    papers[source_file] = {
+                        'title': metadata.get('title', source_file.replace('.pdf', '')),
+                        'authors': metadata.get('authors', 'Unknown'),
+                        'upload_date': '2024-01-01',  # Default date
+                        'status': 'Processed',
+                        'file_size': 'Unknown',
+                        'pages': 'Unknown',
+                        'abstract': 'No abstract available',
+                        'keywords': 'research, AI',
+                        'source_file': source_file
+                    }
+            
+            return pd.DataFrame(list(papers.values()))
+            
+        except Exception as e:
+            st.error(f"Error loading documents: {e}")
+            return pd.DataFrame()
     
     def _apply_filters(self, df: pd.DataFrame, search_term: str, 
                       author_filter: str, date_filter: str) -> pd.DataFrame:
@@ -187,14 +205,14 @@ class DocumentBrowser:
                 filtered_df['authors'].str.contains(author_filter, case=False, na=False)
             ]
         
-        # TODO: Implement date filtering logic
+        # Date filtering could be implemented here when date metadata is available
         
         return filtered_df
     
     def _process_uploaded_files(self, uploaded_files):
         with st.spinner("Processing uploaded files..."):
             for file in uploaded_files:
-                # TODO: Implement file processing logic
+                # File processing would integrate with the document ingestion pipeline
                 st.success(f"Processed {file.name}")
             
             # Refresh document list

@@ -2,6 +2,20 @@ import streamlit as st
 from typing import List, Dict, Any
 from dataclasses import dataclass
 import time
+import sys
+import os
+from pathlib import Path
+
+# Add src to path for imports
+project_root = Path(__file__).parent.parent.parent
+sys.path.append(str(project_root / "src"))
+
+from src.config import Config
+from src.embeddings.embedding_service import OpenAIEmbeddingService
+from src.embeddings.vector_store import VectorStore
+from src.retrieval.retriever import DocumentRetriever
+from src.llm.llm_client import LLMGenerator
+from src.rag_pipeline.pipeline import RAGPipeline
 
 @dataclass
 class ChatMessage:
@@ -36,12 +50,35 @@ class ChatInterface:
     def _initialize_rag_pipeline(self):
         with st.spinner("Initializing RAG pipeline..."):
             try:
-                # TODO: Initialize actual RAG pipeline components
-                # For now, just set a placeholder
-                st.session_state.rag_pipeline = "initialized"
+                # Initialize embedding service
+                embedding_service = OpenAIEmbeddingService(
+                    model=Config.EMBEDDING_MODEL,
+                    api_key=Config.OPENAI_API_KEY
+                )
+                
+                # Initialize vector store
+                vector_store = VectorStore(
+                    collection_name="ai_papers",
+                    persist_directory=Config.VECTOR_DB_PATH
+                )
+                
+                # Initialize retriever
+                retriever = DocumentRetriever(vector_store, embedding_service)
+                
+                # Initialize LLM client
+                llm_client = LLMGenerator(
+                    model=Config.LLM_MODEL,
+                    api_key=Config.OPENAI_API_KEY
+                )
+                
+                # Initialize RAG pipeline
+                rag_pipeline = RAGPipeline(retriever, llm_client)
+                
+                st.session_state.rag_pipeline = rag_pipeline
                 st.success("RAG pipeline initialized successfully!")
             except Exception as e:
                 st.error(f"Failed to initialize RAG pipeline: {e}")
+                st.session_state.rag_pipeline = None
     
     def _display_chat_history(self):
         chat_container = st.container()
@@ -90,18 +127,41 @@ class ChatInterface:
             st.session_state.chat_history.append(assistant_message)
     
     def _generate_response(self, query: str) -> tuple:
-        # TODO: Implement actual RAG pipeline query
-        # For now, return a placeholder response
-        response = f"I understand you're asking about: '{query}'. The RAG pipeline is not yet fully implemented, but this is where I would search through the indexed papers and provide a comprehensive answer with citations."
-        sources = [
-            {
-                "title": "Example Paper 1",
-                "authors": ["Author A", "Author B"],
-                "score": 0.85,
-                "content": "This is an example source excerpt..."
-            }
-        ]
-        return response, sources
+        if st.session_state.rag_pipeline is None:
+            return "RAG pipeline not initialized. Please check your configuration.", []
+        
+        try:
+            # Get settings from session state
+            num_sources = getattr(st.session_state, 'num_sources', 5)
+            temperature = getattr(st.session_state, 'temperature', 0.1)
+            
+            # Query the RAG pipeline
+            result = st.session_state.rag_pipeline.query(
+                user_query=query,
+                k=num_sources,
+                temperature=temperature
+            )
+            
+            # Extract response and sources from RAGResponse object
+            response = result.answer
+            retrieved_docs = result.sources
+            
+            # Format sources for display
+            sources = []
+            for doc in retrieved_docs:
+                metadata = doc.get('metadata', {})
+                sources.append({
+                    "title": metadata.get('title', doc.get('source_name', 'Unknown Title')),
+                    "authors": metadata.get('authors', 'Unknown Author'),
+                    "score": doc.get('similarity_score', 0.0),
+                    "content": doc.get('content_preview', 'No content available')
+                })
+            
+            return response, sources
+            
+        except Exception as e:
+            st.error(f"Error generating response: {e}")
+            return f"Sorry, I encountered an error: {str(e)}", []
     
     def _display_sources(self, sources: List[Dict[str, Any]]):
         for i, source in enumerate(sources, 1):

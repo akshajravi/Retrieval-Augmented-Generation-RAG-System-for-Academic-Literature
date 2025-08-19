@@ -15,7 +15,7 @@ sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 from src.config import Config
 from src.embeddings.embedding_service import OpenAIEmbeddingService, HuggingFaceEmbeddingService
-from src.embeddings.vector_store import ChromaVectorStore, FAISSVectorStore
+from src.embeddings.vector_store import VectorStore, FAISSVectorStore
 from src.retrieval.retriever import DocumentRetriever
 from src.retrieval.query_processor import QueryProcessor
 from src.llm.llm_client import OpenAILLMClient
@@ -88,7 +88,7 @@ class PipelineTester:
         try:
             # Initialize vector store
             if Config.VECTOR_DB_TYPE == "chromadb":
-                vector_store = ChromaVectorStore(
+                vector_store = VectorStore(
                     collection_name="test_collection",
                     persist_directory=Config.VECTOR_DB_PATH
                 )

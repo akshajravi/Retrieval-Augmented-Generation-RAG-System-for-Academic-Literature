@@ -14,7 +14,7 @@ class SearchResult:
     chunk_id: str
 
 
-class ChromaVectorStore:
+class VectorStore:
     def __init__(self, collection_name: str = "papers", persist_directory: str = None):
         self.collection_name = collection_name
         self.persist_directory = persist_directory

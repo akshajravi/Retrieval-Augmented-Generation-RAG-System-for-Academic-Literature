@@ -10,7 +10,7 @@ from dotenv import load_dotenv
 sys.path.append(str(Path(__file__).parent.parent / "src"))
 
 from src.config import Config
-from src.embeddings.vector_store import ChromaVectorStore, FAISSVectorStore
+from src.embeddings.vector_store import VectorStore, FAISSVectorStore
 from src.embeddings.embedding_service import OpenAIEmbeddingService, HuggingFaceEmbeddingService
 
 def setup_chromadb():
@@ -21,7 +21,7 @@ def setup_chromadb():
     db_path.mkdir(parents=True, exist_ok=True)
     
     # Initialize ChromaDB
-    vector_store = ChromaVectorStore(
+    vector_store = VectorStore(
         collection_name="ai_papers",
         persist_directory=str(db_path)
     )

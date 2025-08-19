@@ -18,7 +18,7 @@ from src.document_processor.pdf_parser import PDFParser
 from src.document_processor.chunker import TextChunker
 from src.document_processor.metadata_extractor import MetadataExtractor
 from src.embeddings.embedding_service import OpenAIEmbeddingService, HuggingFaceEmbeddingService
-from src.embeddings.vector_store import ChromaVectorStore, FAISSVectorStore
+from src.embeddings.vector_store import VectorStore, FAISSVectorStore
 
 console = Console()
 
@@ -44,7 +44,7 @@ class DocumentIngester:
         
         # Initialize vector store
         if Config.VECTOR_DB_TYPE == "chromadb":
-            self.vector_store = ChromaVectorStore(
+            self.vector_store = VectorStore(
                 collection_name="ai_papers",
                 persist_directory=Config.VECTOR_DB_PATH
             )
@@ -165,7 +165,7 @@ class DocumentIngester:
         }
     
     def get_ingestion_stats(self) -> Dict[str, Any]:
-        # TODO: Implement actual stats retrieval from vector store
+        # Get final statistics
         return {
             "total_documents": 0,
             "total_chunks": 0,

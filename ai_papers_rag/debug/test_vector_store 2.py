@@ -1,6 +1,6 @@
 import sys
 import os
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 
 import numpy as np
 from embeddings.vector_store import VectorStore, SearchResult
